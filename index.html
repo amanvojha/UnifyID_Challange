@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fun with Random.org</title>
+</head>
+<body>
+  <canvas id="canvas_image" height="128" width="128"></canvas>
+  <script>
+  	const url1 = 'https://www.random.org/integers/?num=10000&min=0&max=16384&col=1&base=10&format=plain&rnd=new';
+	const url2 = 'https://www.random.org/integers/?num=6384&min=0&max=16384&col=1&base=10&format=plain&rnd=new';
+
+	fetch(url1)
+	  .then(res1 => res1.text())
+	  .then(res1 => {
+	    return fetch(url2)
+	      .then(res2 => res2.text())
+	      .then(res2 => res1 + res2)
+	      .then(result => result.trim()
+	      		result.split('\n'))
+	  })
+	  .then(draw)
+	   .catch(console.log("Error !!"))
+
+	function draw(result) {
+			  const canvas = document.getElementById('canvas_image');
+			  const context = canvas.getContext('2d');
+
+			  
+			  var canvasHeight = 128 ;
+			  var canvasWidth = 128 ;
+			  var clampedArray = new Uint8ClampedArray(canvasHeight * canvasWidth * 4);
+
+			  for (height = 0; height < canvasHeight; height++) {
+			    for (width = 0; width < canvasWidth; width++) {
+			      index = (( canvasWidth * height ) + width) * 4;
+			      for (i = 0; i < 4; i++) {
+			        clampedArray[index + i] = Math.floor(result[height*width]/(i+1)) % 256;
+			      }
+			    }
+			  }
+			  var image_data = context.createImageData(canvasHeight, canvasWidth);
+			  image_data.data.set(clampedArray);
+			  context.putImageData(image_data, 0, 0);
+			  
+			  	var bufferSize = 4096;
+				window.AudioContext = window.AudioContext || window.webkitAudioContext;
+				var audioContext = new AudioContext();
+				var whiteNoise = audioContext.createScriptProcessor(bufferSize, 1, 1);
+				whiteNoise.onaudioprocess = function(e) {
+					var output = e.outputBuffer.getChannelData(0);
+					for (var i = 0; i < bufferSize; i++) {
+						output[i] = res[i] * 2 - 1;
+					}
+				}
+				whiteNoise.connect(audioContext.destination);
+				setTimeout(function(){ whiteNoise.disconnect(); }, 3000);
+			}
+	   
+
+  </script>
+</body>
+</html>
